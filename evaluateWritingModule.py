@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
-import re  # Import regex to extract the score
+import re
+import os  # Import regex to extract the score
 
 app = Flask(__name__)
 CORS(app)
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 MODEL_NAME = "deepseek/deepseek-r1"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
