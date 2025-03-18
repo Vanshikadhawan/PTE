@@ -7,7 +7,7 @@ import os  # Import regex to extract the score
 app = Flask(__name__)
 CORS(app)
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 MODEL_NAME = "deepseek/deepseek-r1"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
