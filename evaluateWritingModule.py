@@ -11,6 +11,8 @@ CORS(app)
 # Load environment variables
 load_dotenv()
 api_key = os.getenv("OPENROUTER_API_KEY")
+# print("Loaded API Key:", api_key)
+
 
 MODEL_NAME = "deepseek/deepseek-r1"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -74,4 +76,4 @@ def evaluate_summary():
         return jsonify({"error": "Server error", "details": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)  # Ensure debug is off in production
+    app.run(host="0.0.0.0", port=8080, debug=False)  # Change port to 8080
