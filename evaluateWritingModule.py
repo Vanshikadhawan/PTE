@@ -1,13 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 import requests
 import re
-import os  # Import regex to extract the score
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-OPENROUTER_API_KEY = "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"
+# Load environment variables
+load_dotenv()
+api_key = os.getenv("OPENROUTER_API_KEY")
+
 MODEL_NAME = "deepseek/deepseek-r1"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -20,7 +24,6 @@ def evaluate_summary():
         if not student_summary:
             return jsonify({"error": "No summary provided"}), 400
 
-        # Stronger prompt to enforce scoring in every response
         prompt = (
             f"Evaluate the student's summary based on grammar, clarity, coherence, completeness, and overall quality. "
             f"Provide feedback in exactly five lines as a single paragraph. Ensure that the last sentence explicitly states 'Overall Score: X/10'. "
@@ -30,42 +33,45 @@ def evaluate_summary():
         )
 
         headers = {
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         payload = {
             "model": MODEL_NAME,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.5,  
-            "max_tokens": 250  
+            "temperature": 0.5,
+            "max_tokens": 250
         }
 
         response = requests.post(API_URL, json=payload, headers=headers)
+
+        # Check if response is successful
+        if response.status_code != 200:
+            return jsonify({"error": "API request failed", "details": response.text}), 500
+
         response_json = response.json()
 
-        print("Response JSON:", response_json)  # Debugging print
+        # Validate AI response structure
+        if "choices" not in response_json or not response_json["choices"]:
+            return jsonify({"error": "Invalid AI response format", "details": response_json}), 500
 
-        if response.status_code == 200 and "choices" in response_json:
-            if response_json["choices"]:
-                ai_feedback = response_json["choices"][0].get("message", {}).get("content", "").strip()
+        ai_feedback = response_json["choices"][0].get("message", {}).get("content", "").strip()
 
-                if ai_feedback:
-                    # Extract numeric score using regex
-                    match = re.search(r'Overall Score:\s*(\d+)/10', ai_feedback)
-                    score = int(match.group(1)) if match else 0  # Default to 0 if not found
+        if ai_feedback:
+            match = re.search(r'Overall Score:\s*(\d+)/10', ai_feedback)
+            score = int(match.group(1)) if match else None  # Allow None instead of forcing 0
 
-                    # Remove "Overall Score: X/10" from feedback
-                    cleaned_feedback = re.sub(r'Overall Score:\s*\d+/10', '', ai_feedback).strip()
+            cleaned_feedback = re.sub(r'Overall Score:\s*\d+/10', '', ai_feedback).strip()
 
-                    return jsonify({
-                        "feedback": cleaned_feedback,
-                        "score": score
-                    })
-        
-        return jsonify({"error": "Received empty response from AI", "details": response_json}), 500
+            return jsonify({
+                "feedback": cleaned_feedback,
+                "score": score if score is not None else "Not Provided"
+            })
+
+        return jsonify({"error": "Empty response from AI", "details": response_json}), 500
 
     except Exception as e:
         return jsonify({"error": "Server error", "details": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)  # Ensure debug is off in production
