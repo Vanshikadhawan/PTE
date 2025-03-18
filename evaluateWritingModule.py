@@ -12,7 +12,7 @@ CORS(app)
 load_dotenv()
 api_key = os.getenv("OPENROUTER_API_KEY")
 # print("Loaded API Key:", api_key)
-
+SECRET_KEY = os.environ.get("PTE")
 
 MODEL_NAME = "deepseek/deepseek-r1"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -35,7 +35,7 @@ def evaluate_summary():
         )
 
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {SECRET_KEY}",
             "Content-Type": "application/json"
         }
         payload = {
