@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose port 5000 for web applications
-EXPOSE 5000
+EXPOSE 8000
 
 # Run the Python script
 CMD ["python", "evaluateWritingModule.py"]
